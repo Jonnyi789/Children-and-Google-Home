@@ -1,7 +1,7 @@
 import xlsxwriter
-# file = open('testing.txt', 'r')
-# Activity = file.readlines()
-# file.close()
+#file = open('Test 101.txt', 'r')
+#Activity = file.readlines()
+#file.close()
 
 def main():
     inname = input("Input txt file name: ")
@@ -12,24 +12,24 @@ def main():
 
     Activitylog = []
     for line in Activity:
-        # Strip whitespace, should leave nothing if empty line was just "\n"
-        if not line.strip():
+        # Strip whitespace; remove leading and trailing whitespaces
+        if not line.strip():    # ignore if it's an empty line "\n"
             continue
-        # We got something, save it
+        # Add to the list
         else:
             Activitylog.append(line)
-
-    #print (Activitylog)
+    #print(Activitylog)
 
     print("Dividing into blocks... \n")
     curr = 0
-    ind = 0
+    fst = 0
     block = []
-    for line in Activitylog:
+    while curr < len(Activitylog):  # First line "Assistant\n" needs to be moved to the end of .txt file.
+    #for line in Activitylog:
         if Activitylog[curr] == 'Assistant\n':
-            if Activitylog[ind] != 'Unknown voice command\n' and Activitylog[ind+1] != 'Something went wrong. Please try again later.\n':
-                block.append(Activitylog[ind:curr])
-            ind = curr + 1
+            if Activitylog[fst] != 'Unknown voice command\n' and Activitylog[fst+1] != 'Something went wrong. Please try again later.\n':
+                block.append(Activitylog[fst:curr]) # Discard useless blocks
+            fst = curr + 1
             curr += 1
         else:
             curr += 1
@@ -38,9 +38,9 @@ def main():
     question = []
     answer = []
     timestamp = []
-    info = []
+    speaker = []
     length = len(block)
-    block.reverse()
+    block.reverse() # chronological
     for i in range(length):
         question.append(block[i][0])
         for j in range(len(block[i])):
@@ -49,31 +49,30 @@ def main():
         for j in range(len(block[i])):
             if block[i][j] == 'Products:\n':
                 temp = []
-                for num in range(1, j - 1):
-                    temp.append(block[i][num])
-                str = ' '.join(temp)
+                for line in range(1, j - 1):
+                    temp.append(block[i][line])
+                str = ' '.join(temp)    # ["A", "B", "C"] into "A B C"
                 answer.append(str)
-        if '\u2003From unrecognized speaker\n' in block[i]:
-            info.append("unrecognized speaker")
+        if ' From unrecognized speaker\n' in block[i]:
+            speaker.append("unrecognized speaker")
         else:
-            info.append(" ")
+            speaker.append("Participant")
 
 
-    # Excel
+    # Excel generation
     workbook = xlsxwriter.Workbook(outname)
-    worksheet1 = workbook.add_worksheet()
-    worksheet1.write('A1', "Questions")
-    worksheet1.write('B1', "Answers")
-    worksheet1.write('C1', "Timestamp")
-    worksheet1.write('D1', "Speaker info")
+    worksheet = workbook.add_worksheet()
+    worksheet.write('A1', "Questions")
+    worksheet.write('B1', "Answers")
+    worksheet.write('C1', "Timestamp")
+    worksheet.write('D1', "Speaker info")
 
-    worksheet1.write_column('A2', question)
-    worksheet1.write_column('B2', answer)
-    worksheet1.write_column('C2', timestamp)
-    worksheet1.write_column('D2', info)
+    worksheet.write_column('A2', question)
+    worksheet.write_column('B2', answer)
+    worksheet.write_column('C2', timestamp)
+    worksheet.write_column('D2', speaker)
 
     workbook.close()
-    print("Conversion complete!")
+    print("Conversion completed!")
 # run it
 main()
-
